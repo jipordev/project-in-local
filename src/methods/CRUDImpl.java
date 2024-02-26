@@ -11,12 +11,12 @@ import org.nocrala.tools.texttablefmt.Table;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
 
 public class CRUDImpl implements CRUD{
     static Scanner scanner = new Scanner(System.in);
-    private static final String CONFIG_FILE = "config.bak";
     private static final String DATA_SOURCE_FILE = "product.bak";
     private static final String TRANSFER_FILE = "transproduct.bak";
     public static FileMethods fileMethods = new FileMethodsImpl();
@@ -57,10 +57,10 @@ public class CRUDImpl implements CRUD{
     }
 
     @Override
-    public void deleteProduct(List<Product> productList, String fileName) {
+    public void deleteProduct(List<Product> productList) {
         System.out.print("Enter code to delete: ");
         String codeToDelete = scanner.nextLine();
-        productList.removeIf(product -> product.getProductCode().equalsIgnoreCase(codeToDelete));
+        productList.removeIf(product -> product.getProductCode().equals(codeToDelete));
         fileMethods.writeToFile(productList,DATA_SOURCE_FILE);
         System.out.println("#################");
         System.out.println("Product deleted successfully.");
@@ -205,61 +205,21 @@ public class CRUDImpl implements CRUD{
     public void searchProductByName(List<Product> productList) {
         System.out.print("Enter product name or part of the name to search: ");
         String searchKeyword = scanner.nextLine().trim().toLowerCase();
-        List<Product> searchResults = new ArrayList<>();
 
+        List<Product> matchingProducts = new ArrayList<>();
         for (Product product : productList) {
             if (product.getProductName().toLowerCase().contains(searchKeyword)) {
-                searchResults.add(product);
+                matchingProducts.add(product);
             }
         }
 
-        if (searchResults.isEmpty()) {
+        if (matchingProducts.isEmpty()) {
             System.out.println("No products found matching the search criteria.");
         } else {
-            displayAllProduct(searchResults, 1, productList.size());
+            displayAllProduct(matchingProducts, 1, matchingProducts.size());
         }
     }
-    @Override
-    public int setNewRow() {
-        try (BufferedReader reader = new BufferedReader(new FileReader(CONFIG_FILE))) {
-            String line = reader.readLine();
-            if (line != null) {
-                return Integer.parseInt(line.trim());
-            }
-        } catch (IOException | NumberFormatException e) {
-            System.out.println(e.getMessage());
-        }
-        return 10;
-    }
-    @Override
-    public void setPageSize(Scanner scanner) {
-        System.out.println("#".repeat(20));
-        System.out.println("Set Row to Display in Table");
-        int newRowSize;
-        do {
-            System.out.print("Enter Row (greater than 0): ");
-            while (!scanner.hasNextInt()) {
-                System.out.println("Invalid input. Please enter a valid integer.");
-                scanner.next();
-            }
-            newRowSize = scanner.nextInt();
-            scanner.nextLine();
-        } while (newRowSize <= 0);
-        System.out.print("Do you want to set new row size (Y/N): ");
-        String confirm = scanner.nextLine();
-        if (confirm.equalsIgnoreCase("y")) {
-            savePageSize(newRowSize);
-        }
-    }
-    @Override
-    public int savePageSize(int pageSize) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(CONFIG_FILE))) {
-             writer.write(String.valueOf(pageSize));
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-        return pageSize;
-    }
+
     @Override
     public void backUpData(String sourceFilePath, String backupFilePath) {
         try {

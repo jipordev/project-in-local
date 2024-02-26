@@ -3,8 +3,11 @@ import filemethods.FileMethodsImpl;
 import methods.CRUD;
 import methods.CRUDImpl;
 import model.Product;
+import pagination.Pagination;
+import pagination.PaginationImpl;
 
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -13,12 +16,13 @@ public class Main {
     private static final String DATA_SOURCE_FILE = "product.bak";
     private static final String TRANSFER_FILE = "transproduct.bak";
     static CRUD crud = new CRUDImpl();
+    static Pagination pagination = new PaginationImpl();
     static FileMethods fileMethods = new FileMethodsImpl();
     static Scanner scanner = new Scanner(System.in);
     public static  void main(String[] args) {
         do {
             int pageNumber =1;
-            int pageSize= crud.setNewRow();
+            int pageSize= pagination.setNewRow();
             List<Product> productList = new ArrayList<>();
             System.out.println("""
                 ######################################################################
@@ -32,11 +36,11 @@ public class Main {
                         productList = fileMethods.readProductsFromFile(DATA_SOURCE_FILE);
                         crud.displayAllProduct(productList, pageNumber, pageSize);
                     }
-                    case "o" -> crud.setPageSize(scanner);
+                    case "o" -> pagination.setPageSize(scanner);
                     case "ra" -> crud.randomRecord(productList,DATA_SOURCE_FILE);
                     case "c" -> crud.createProduct(productList,DATA_SOURCE_FILE);
                     case "r" -> crud.readProduct(productList,TRANSFER_FILE);
-                    case "d" -> crud.deleteProduct(productList,TRANSFER_FILE);
+                    case "d" -> crud.deleteProduct(productList);
                     case "u" -> crud.updateProduct(productList,TRANSFER_FILE);
                     case "s" -> crud.searchProductByName(productList);
                     case "k" -> {

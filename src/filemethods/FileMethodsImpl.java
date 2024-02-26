@@ -9,7 +9,6 @@ import java.util.List;
 
 public class FileMethodsImpl implements FileMethods{
 
-
     @Override
     public List<Product> readProductsFromFile(String fileName) {
         List<Product> productList = new ArrayList<>();
@@ -32,7 +31,6 @@ public class FileMethodsImpl implements FileMethods{
         } catch (IOException | NumberFormatException e) {
             System.out.println("Error reading file: " + e.getMessage());
         }
-
         return productList;
     }
 
@@ -52,4 +50,5 @@ public class FileMethodsImpl implements FileMethods{
             System.out.println("Error writing to file: " + e.getMessage());
         }
     }
+
 }
