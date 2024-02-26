@@ -7,7 +7,6 @@ import pagination.Pagination;
 import pagination.PaginationImpl;
 
 import java.text.SimpleDateFormat;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -44,15 +43,9 @@ public class Main {
                     case "u" -> crud.updateProduct(productList,TRANSFER_FILE);
                     case "s" -> crud.searchProductByName(productList);
                     case "k" -> {
-                        String backupDirectory = "backup/";
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
-                        String timestamp = dateFormat.format(new Date());
-                        String backupFileName = "backupfile_" + timestamp + ".bak";
-                        String backupFilePath = backupDirectory + backupFileName;
-
+                        String backupFilePath = fileMethods.backupFileDir();
                         System.out.print("Are you sure to Backup [Y/N]: ");
                         String ch = scanner.nextLine();
-
                         if (ch.equalsIgnoreCase("y")) {
                             crud.backUpData(DATA_SOURCE_FILE,backupFilePath);
                         }

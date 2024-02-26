@@ -3,8 +3,10 @@ package filemethods;
 import model.Product;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class FileMethodsImpl implements FileMethods{
@@ -51,4 +53,12 @@ public class FileMethodsImpl implements FileMethods{
         }
     }
 
+    @Override
+    public String backupFileDir() {
+        String backupDirectory = "backup/";
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
+        String timestamp = dateFormat.format(new Date());
+        String  backupFileName = "backupfile_" + timestamp + ".bak";
+        return backupDirectory + backupFileName;
+    }
 }
