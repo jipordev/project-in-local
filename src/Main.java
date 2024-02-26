@@ -37,9 +37,9 @@ public class Main {
                     }
                     case "o" -> pagination.setPageSize(scanner);
                     case "ra" -> crud.randomRecord(productList,DATA_SOURCE_FILE);
-                    case "c" -> crud.createProduct(productList,DATA_SOURCE_FILE);
+                    case "c" -> crud.createProduct();
                     case "r" -> crud.readProduct(productList,TRANSFER_FILE);
-                    case "d" -> crud.deleteProduct(productList);
+                    case "d" -> crud.deleteProduct();
                     case "u" -> crud.updateProduct(productList,TRANSFER_FILE);
                     case "s" -> crud.searchProductByName(productList);
                     case "k" -> {

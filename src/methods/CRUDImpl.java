@@ -40,24 +40,24 @@ public class CRUDImpl implements CRUD{
     }
 
     @Override
-    public void createProduct(List<Product> productList, String fileName) {
+    public void createProduct() {
+        List<Product> productFromFile = fileMethods.readProductsFromFile(DATA_SOURCE_FILE);
         Product product = new Product();
         System.out.print("Enter CODE : ");
         product.setProductCode(scanner.nextLine());
         System.out.print("Enter NAME : ");
         product.setProductName(scanner.nextLine());
         System.out.print("Enter PRICE : ");
-        product.setProductPrice(Double.parseDouble(scanner.nextLine()))
-    ;
+        product.setProductPrice(Double.parseDouble(scanner.nextLine()));
         System.out.print("Enter QTY : ");
         product.setQty(Integer.parseInt(scanner.nextLine()));
         product.setDate(LocalDate.now());
-        productList.add(product);
-        fileMethods.writeToFile(productList, DATA_SOURCE_FILE);
+        productFromFile.add(product);
+        fileMethods.writeToFile(productFromFile, TRANSFER_FILE);
     }
 
     @Override
-    public void deleteProduct(List<Product> productList) {
+    public void deleteProduct() {
         Table table = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER,ShownBorders.SURROUND);
         // Read products from the data source file
         List<Product> productsFromFile = fileMethods.readProductsFromFile(DATA_SOURCE_FILE);
