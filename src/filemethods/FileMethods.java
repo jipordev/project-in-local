@@ -9,4 +9,5 @@ public interface FileMethods {
 
     void writeToFile(List<Product> productList, String fileName);
     String  backupFileDir();
+    void writeTransferRecord(Product product, String transferFileName);
 }

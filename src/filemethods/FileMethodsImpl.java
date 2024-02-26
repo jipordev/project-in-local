@@ -61,4 +61,13 @@ public class FileMethodsImpl implements FileMethods{
         String  backupFileName = "backupfile_" + timestamp + ".bak";
         return backupDirectory + backupFileName;
     }
+    @Override
+    public void writeTransferRecord(Product product, String transferFileName) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(transferFileName, true))) {
+            // Append the product details to the transfer file
+            writer.write(product.toString() + "\n");
+        } catch (IOException e) {
+            System.err.println("Error writing transfer record: " + e.getMessage());
+        }
+    }
 }

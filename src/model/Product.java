@@ -8,7 +8,24 @@ public class Product {
     private Double productPrice;
     private Integer qty;
     private LocalDate date;
+    private String status;
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Product(String productCode, String productName, Double productPrice, Integer qty, LocalDate date, String status) {
+        this.productCode = productCode;
+        this.productName = productName;
+        this.productPrice = productPrice;
+        this.qty = qty;
+        this.date = date;
+        this.status = status;
+    }
     public Product(String productCode, String productName, Double productPrice, Integer qty, LocalDate date) {
         this.productCode = productCode;
         this.productName = productName;

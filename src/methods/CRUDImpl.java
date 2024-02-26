@@ -58,12 +58,57 @@ public class CRUDImpl implements CRUD{
 
     @Override
     public void deleteProduct(List<Product> productList) {
+        Table table = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER,ShownBorders.SURROUND);
+        // Read products from the data source file
+        List<Product> productsFromFile = fileMethods.readProductsFromFile(DATA_SOURCE_FILE);
+
         System.out.print("Enter code to delete: ");
         String codeToDelete = scanner.nextLine();
-        productList.removeIf(product -> product.getProductCode().equals(codeToDelete));
-        fileMethods.writeToFile(productList,DATA_SOURCE_FILE);
-        System.out.println("#################");
-        System.out.println("Product deleted successfully.");
+
+        // Find the product to delete
+        Optional<Product> productToDeleteOpt = productsFromFile.stream()
+                .filter(product -> product.getProductCode().equals(codeToDelete))
+                .findFirst();
+
+        // Check if the product exists
+        if (productToDeleteOpt.isPresent()) {
+            Product productToDelete = productToDeleteOpt.get();
+            // Add the product to the transfer file with status "delete"
+            Product transferProduct = new Product(
+                    productToDelete.getProductCode(),
+                    productToDelete.getProductName(),
+                    productToDelete.getProductPrice(),
+                    productToDelete.getQty(),
+                    productToDelete.getDate(),
+                    "delete"
+            );
+            fileMethods.writeTransferRecord(transferProduct, TRANSFER_FILE);
+            for (Product product : productsFromFile){
+                if (product.getProductCode().equals(codeToDelete)){
+                    table.addCell("Product code: "+product.getProductCode());
+                    table.addCell("Product name: "+product.getProductName());
+                    table.addCell("Product price: "+product.getProductPrice());
+                    table.addCell("Product quantity: "+product.getQty());
+                    table.addCell("Product date: "+product.getDate());
+                    table.addCell("Product status: "+product.getStatus());
+                    System.out.println(table.render());
+                }
+            }
+            // Remove the product from the original file
+            System.out.print("Are you sure to delete (Y/N): ");
+            if (scanner.nextLine().equalsIgnoreCase("y")){
+                productsFromFile.remove(productToDelete);
+                // Write the updated product list back to the data source file
+                fileMethods.writeToFile(productsFromFile, DATA_SOURCE_FILE);
+                System.out.println("#################");
+                System.out.println("Product deleted successfully.");
+            } else {
+                System.out.println("#################");
+                System.out.println("Deleting product canceled...");
+            }
+        } else {
+            System.out.println("Product not found.");
+        }
     }
 
     @Override
@@ -74,11 +119,12 @@ public class CRUDImpl implements CRUD{
         System.out.print("Enter product code : ");
         String code = scanner.nextLine();
         System.out.println("#######################################");
-        table.addCell("     Product Code     ");
-        table.addCell("     Product Name     ");
-        table.addCell("     Product Price     ");
-        table.addCell("     Product QTY     ");
-        table.addCell("     Product Date     ");
+        table.addCell("      Product Code     ");
+        table.addCell("      Product Name     ");
+        table.addCell("      Product Price     ");
+        table.addCell("      Product QTY     ");
+        table.addCell("      Product Date     ");
+        table.addCell("      Product Status      ");
         for (Product product : productList) {
             if (product.getProductCode().equals(code)){
                 table.addCell(product.getProductCode(),cellStyle);
@@ -86,6 +132,7 @@ public class CRUDImpl implements CRUD{
                 table.addCell(product.getProductPrice().toString(),cellStyle);
                 table.addCell(product.getQty().toString(),cellStyle);
                 table.addCell(product.getDate().toString(),cellStyle);
+                table.addCell(product.getStatus());
             }
         }
         System.out.println(table.render());
