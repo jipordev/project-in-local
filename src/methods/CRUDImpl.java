@@ -7,11 +7,9 @@ import org.nocrala.tools.texttablefmt.BorderStyle;
 import org.nocrala.tools.texttablefmt.CellStyle;
 import org.nocrala.tools.texttablefmt.ShownBorders;
 import org.nocrala.tools.texttablefmt.Table;
+import pagination.Pagination;
+import pagination.PaginationImpl;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -20,9 +18,10 @@ public class CRUDImpl implements CRUD{
     private static final String DATA_SOURCE_FILE = "product.bak";
     private static final String TRANSFER_FILE = "transproduct.bak";
     public static FileMethods fileMethods = new FileMethodsImpl();
+    public static Pagination pagination = new PaginationImpl();
 
     @Override
-    public void randomRecord(List<Product> productList, String fileName) {
+    public void randomRecord(List<Product> productList) {
         System.out.print("Enter amount of record : ");
         int randomNumber = Integer.parseInt(scanner.nextLine());
         Product[] products = new Product[randomNumber];
@@ -33,6 +32,7 @@ public class CRUDImpl implements CRUD{
             products[i].setProductPrice(0.0);
             products[i].setQty(0);
             products[i].setDate(LocalDate.now());
+            products[i].setStatus("null");
         }
         productList.addAll(List.of(products));
 
@@ -40,8 +40,7 @@ public class CRUDImpl implements CRUD{
     }
 
     @Override
-    public void createProduct() {
-        List<Product> productFromFile = fileMethods.readProductsFromFile(DATA_SOURCE_FILE);
+    public void createProduct(List<Product> productList) {
         Product product = new Product();
         System.out.print("Enter CODE : ");
         product.setProductCode(scanner.nextLine());
@@ -52,8 +51,11 @@ public class CRUDImpl implements CRUD{
         System.out.print("Enter QTY : ");
         product.setQty(Integer.parseInt(scanner.nextLine()));
         product.setDate(LocalDate.now());
-        productFromFile.add(product);
-        fileMethods.writeToFile(productFromFile, TRANSFER_FILE);
+        product.setStatus("new");
+        productList.add(product);
+        fileMethods.writeToFile(productList, TRANSFER_FILE);
+
+        System.out.println("New product created successfully.");
     }
 
     @Override
@@ -83,17 +85,14 @@ public class CRUDImpl implements CRUD{
                     "delete"
             );
             fileMethods.writeTransferRecord(transferProduct, TRANSFER_FILE);
-            for (Product product : productsFromFile){
-                if (product.getProductCode().equals(codeToDelete)){
-                    table.addCell("Product code: "+product.getProductCode());
-                    table.addCell("Product name: "+product.getProductName());
-                    table.addCell("Product price: "+product.getProductPrice());
-                    table.addCell("Product quantity: "+product.getQty());
-                    table.addCell("Product date: "+product.getDate());
-                    table.addCell("Product status: "+product.getStatus());
-                    System.out.println(table.render());
-                }
-            }
+
+            table.addCell("Product code: "+productToDelete.getProductCode());
+            table.addCell("Product name: "+productToDelete.getProductName());
+            table.addCell("Product price: "+productToDelete.getProductPrice());
+            table.addCell("Product quantity: "+productToDelete.getQty());
+            table.addCell("Product date: "+productToDelete.getDate());
+            table.addCell("Product status: "+productToDelete.getStatus());
+            System.out.println(table.render());
             // Remove the product from the original file
             System.out.print("Are you sure to delete (Y/N): ");
             if (scanner.nextLine().equalsIgnoreCase("y")){
@@ -112,34 +111,38 @@ public class CRUDImpl implements CRUD{
     }
 
     @Override
-    public void readProduct(List<Product> productList, String fileName) {
-        productList = fileMethods.readProductsFromFile(DATA_SOURCE_FILE);
-        Table table = new Table(5, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE,ShownBorders.ALL);
-        CellStyle cellStyle = new CellStyle(CellStyle.HorizontalAlign.center);
+    public void readProduct(List<Product> productList) {
+        productList = fileMethods.readProductsFromFile(TRANSFER_FILE);
+        Table table = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE, ShownBorders.SURROUND);
         System.out.print("Enter product code : ");
         String code = scanner.nextLine();
         System.out.println("#######################################");
-        table.addCell("      Product Code     ");
-        table.addCell("      Product Name     ");
-        table.addCell("      Product Price     ");
-        table.addCell("      Product QTY     ");
-        table.addCell("      Product Date     ");
-        table.addCell("      Product Status      ");
-        for (Product product : productList) {
-            if (product.getProductCode().equals(code)){
-                table.addCell(product.getProductCode(),cellStyle);
-                table.addCell(product.getProductName(),cellStyle);
-                table.addCell(product.getProductPrice().toString(),cellStyle);
-                table.addCell(product.getQty().toString(),cellStyle);
-                table.addCell(product.getDate().toString(),cellStyle);
-                table.addCell(product.getStatus());
+
+        Product foundProduct = null;
+        // Iterate over the productList in reverse order to find the last product with the given code
+        for (int i = productList.size() - 1; i >= 0; i--) {
+            Product product = productList.get(i);
+            if (product.getProductCode().equals(code)) {
+                foundProduct = product;
+                break; // Exit the loop once the last product with the given code is found
             }
+        }
+
+        if (foundProduct != null) {
+            table.addCell("Product Code: " + foundProduct.getProductCode());
+            table.addCell("Product Name: " + foundProduct.getProductName());
+            table.addCell("Product Price: " + foundProduct.getProductPrice().toString());
+            table.addCell("Product Qty: " + foundProduct.getQty().toString());
+            table.addCell("Product Date: " + foundProduct.getDate().toString());
+            table.addCell("Product Status: " + foundProduct.getStatus());
+        } else {
+            System.out.println("No product found with the given code.");
         }
         System.out.println(table.render());
     }
 
     @Override
-    public void updateProduct(List<Product> productList, String fileName) {
+    public void updateProduct(List<Product> productList) {
         Product updateProduct = new Product();
         System.out.println("""
                 1. Update all
@@ -177,12 +180,12 @@ public class CRUDImpl implements CRUD{
         }
     }
     @Override
-    public int displayAllProduct(List<Product> productList, int pageNumber, int pageSize) {
+    public void displayAllProduct(List<Product> productList, int pageNumber, int pageSize) {
         boolean isTrue;
         do {
             int startIndex = (pageNumber - 1) * pageSize;
             int endIndex = Math.min(startIndex + pageSize, productList.size());
-            Table table = new Table(5, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE, ShownBorders.ALL);
+            Table table = new Table(6, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE, ShownBorders.ALL);
             CellStyle cellStyle = new CellStyle(CellStyle.HorizontalAlign.center);
             System.out.println("#######################################");
             table.addCell("     Product Code     ");
@@ -190,6 +193,7 @@ public class CRUDImpl implements CRUD{
             table.addCell("     Product Price     ");
             table.addCell("     Product QTY     ");
             table.addCell("     Product Date     ");
+            table.addCell("  Status  ");
             for (int i = startIndex; i < endIndex; i++) {
                 Product product = productList.get(i);
                 table.addCell(product.getProductCode(), cellStyle);
@@ -197,10 +201,11 @@ public class CRUDImpl implements CRUD{
                 table.addCell(product.getProductPrice().toString(), cellStyle);
                 table.addCell(product.getQty().toString(), cellStyle);
                 table.addCell(product.getDate().toString(), cellStyle);
+                table.addCell(product.getStatus(), cellStyle);
             }
             System.out.println(table.render());
             System.out.println("o" + "~".repeat(125) + "o");
-            int totalPage = productList.size() / pageSize;
+            int totalPage = (int) Math.ceil((double) productList.size() / pageSize); // Calculate total pages
             System.out.printf("Page: %d of %d \t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t   Total Records: %d%n", pageNumber, totalPage, productList.size());
             System.out.print("Page Navigation\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t(F)irst  (P)revious  (G)oto  (N)ext  (L)ast \n");
             System.out.println("o" + "~".repeat(125) + "o");
@@ -209,9 +214,7 @@ public class CRUDImpl implements CRUD{
             System.out.print(">(B)ack or Navigate Page :  ");
             option = scanner.nextLine().toLowerCase();
             switch (option) {
-                case "f" ->
-                    pageNumber = 1;
-
+                case "f" -> pageNumber = 1;
                 case "p" -> {
                     if (pageNumber > 1) {
                         pageNumber--;
@@ -221,7 +224,7 @@ public class CRUDImpl implements CRUD{
                     try {
                         System.out.print("> Enter Page Number : ");
                         int pageNo = Integer.parseInt(scanner.nextLine());
-                        if (pageNo >= 1 && pageNo <= productList.size() / pageSize) {
+                        if (pageNo >= 1 && pageNo <= totalPage) {
                             pageNumber = pageNo;
                         } else {
                             System.out.println("Invalid page number.");
@@ -231,67 +234,32 @@ public class CRUDImpl implements CRUD{
                     }
                 }
                 case "n" -> {
-                    if (pageNumber < productList.size() / pageSize) {
+                    if (pageNumber < totalPage) {
                         pageNumber++;
                     }
                 }
-                case "l" ->
-                    pageNumber = productList.size() / pageSize;
-
-                case "b" ->
-                    isTrue = false;
-
-                default ->
-                    System.out.println("Invalid Option.");
-
+                case "l" -> pageNumber = totalPage;
+                case "b" -> isTrue = false;
+                default -> System.out.println("Invalid Option.");
             }
         } while (isTrue);
-        return pageSize;
     }
     @Override
-    public void searchProductByName(List<Product> productList) {
+    public void searchProductByName() {
+        List<Product> searchProducts = fileMethods.readProductsFromFile(DATA_SOURCE_FILE);
         System.out.print("Enter product name or part of the name to search: ");
         String searchKeyword = scanner.nextLine().trim().toLowerCase();
 
-        List<Product> matchingProducts = new ArrayList<>();
-        for (Product product : productList) {
+        for (Product product : searchProducts) {
             if (product.getProductName().toLowerCase().contains(searchKeyword)) {
-                matchingProducts.add(product);
+                searchProducts.add(product);
             }
         }
 
-        if (matchingProducts.isEmpty()) {
+        if (searchProducts.isEmpty()) {
             System.out.println("No products found matching the search criteria.");
         } else {
-            displayAllProduct(matchingProducts, 1, matchingProducts.size());
-        }
-    }
-
-    @Override
-    public void backUpData(String sourceFilePath, String backupFilePath) {
-        try {
-            Path sourcePath = Path.of(sourceFilePath);
-            Path backupPath = Path.of(backupFilePath);
-            if (Files.exists(sourcePath)) {
-                // Create the backup directory if it doesn't exist
-                Files.createDirectories(backupPath.getParent());
-
-                // Use buffered streams for better IO performance
-                try (InputStream inStream = Files.newInputStream(sourcePath);
-                     OutputStream outStream = Files.newOutputStream(backupPath)) {
-                    byte[] buffer = new byte[8192]; // Adjust buffer size as needed
-                    int bytesRead;
-                    while ((bytesRead = inStream.read(buffer)) != -1) {
-                        outStream.write(buffer, 0, bytesRead);
-                    }
-                }
-
-                System.out.println("Backup created successfully.");
-            } else {
-                System.out.println("Source file does not exist.");
-            }
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
+            displayAllProduct(searchProducts, 1, pagination.setNewRow());
         }
     }
 }
