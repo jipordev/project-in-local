@@ -10,6 +10,7 @@ import org.nocrala.tools.texttablefmt.Table;
 import pagination.Pagination;
 import pagination.PaginationImpl;
 
+import javax.print.attribute.standard.OrientationRequested;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -246,20 +247,22 @@ public class CRUDImpl implements CRUD{
     }
     @Override
     public void searchProductByName() {
-        List<Product> searchProducts = fileMethods.readProductsFromFile(DATA_SOURCE_FILE);
+        List<Product> searchProducts = fileMethods.readProductsFromFile(TRANSFER_FILE);
         System.out.print("Enter product name or part of the name to search: ");
         String searchKeyword = scanner.nextLine().trim().toLowerCase();
 
+        List<Product> matchingProducts = new ArrayList<>();
+
         for (Product product : searchProducts) {
             if (product.getProductName().toLowerCase().contains(searchKeyword)) {
-                searchProducts.add(product);
+                matchingProducts.add(product);
             }
         }
 
-        if (searchProducts.isEmpty()) {
-            System.out.println("No products found matching the search criteria.");
+        if (!matchingProducts.isEmpty()) {
+            displayAllProduct(matchingProducts, 1, pagination.setNewRow());
         } else {
-            displayAllProduct(searchProducts, 1, pagination.setNewRow());
+            System.out.println("No products found matching the search criteria.");
         }
     }
 }

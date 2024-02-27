@@ -8,6 +8,8 @@ import org.nocrala.tools.texttablefmt.Table;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -126,8 +128,37 @@ public class FileMethodsImpl implements FileMethods{
     @Override
     public void restoreData() {
         listingBackupFiles();
-        System.out.print("Choose number of file you want to restore: ");
+        String backupDirectory = "backup/";
+        String restoreDirectory = "restore/";
+
+        System.out.print("Choose the number of the file you want to restore: ");
         int fileNumber = Integer.parseInt(new Scanner(System.in).nextLine());
+
+        // Validate user input
+        File backupDir = new File(backupDirectory);
+        File[] files = backupDir.listFiles();
+        if (files != null && fileNumber >= 1 && fileNumber <= files.length) {
+            File selectedBackupFile = files[fileNumber - 1];
+
+            // Create restore directory if it doesn't exist
+            File restoreDir = new File(restoreDirectory);
+            if (!restoreDir.exists()) {
+                restoreDir.mkdirs();
+            }
+
+            // Construct the path for the restored file
+            String restoredFilePath = restoreDirectory + selectedBackupFile.getName();
+
+            // Copy the selected backup file to the restore directory
+            try {
+                Files.copy(selectedBackupFile.toPath(), Paths.get(restoredFilePath), StandardCopyOption.REPLACE_EXISTING);
+                System.out.println("File successfully restored to: " + restoredFilePath);
+            } catch (IOException e) {
+                System.err.println("Error restoring file: " + e.getMessage());
+            }
+        } else {
+            System.out.println("Invalid file number selected.");
+        }
     }
 
     @Override

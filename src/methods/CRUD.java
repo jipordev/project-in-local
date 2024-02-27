@@ -2,6 +2,7 @@ package methods;
 
 import model.Product;
 
+import javax.swing.*;
 import java.util.List;
 
 public interface CRUD {
